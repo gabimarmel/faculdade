@@ -10,6 +10,7 @@
 #define PAUSE "pause"
 #define CLEAR "cls"
 
+//teste
 typedef  struct game
 {
     char nome[64];
