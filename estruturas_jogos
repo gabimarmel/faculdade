@@ -1,0 +1,332 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+//Linux
+//#define CLEAR "clear"
+//#define PAUSE "read a"
+#define NUMERO "4"
+/**windows**/
+#define PAUSE "pause"
+#define CLEAR "cls"
+
+typedef  struct game
+{
+    char nome[64];
+    char plataforma [32];
+    int lancamento;
+    float preco;
+    struct game *proximo;
+}tpGame;
+
+void limpa_buffer()
+{
+    //Linux
+    //__fpurge(stdin);
+
+    // Limpeza do buffer do teclado para Windows
+    fflush(stdin);
+}
+
+void ler_game(tpGame *newgame)
+{
+    printf("********** CADASTRAMENTO **********\n\n");
+
+    printf("\nNome do jogo: ");
+    limpa_buffer();
+    scanf("%[^\n]s",newgame->nome);
+
+    printf("\nPlataforma do jogo: ");
+    limpa_buffer();
+    scanf("%[^\n]s",newgame->plataforma);
+
+    printf("\nAno de lancamento do jogo: ");
+    limpa_buffer();
+    scanf("%d",&newgame->lancamento);
+
+    printf("\nPreco do jogo: ");
+    limpa_buffer();
+    scanf("%f",&newgame->preco);
+
+    printf("\n\n***********************************\n");
+    system(PAUSE);
+}
+
+
+
+void imprime_game(tpGame *game)
+{
+
+    printf("\nNome do jogo: %s",game->nome);
+
+    printf("\nPlataforma do jogo: %s",game->plataforma);
+
+    printf("\nAno de lancamento do jogo: %d",game->lancamento);
+
+    printf("\nPreco do jogo: R$%0.2f\n\n",game->preco);
+
+}
+
+void imprime_erros(int code)
+{
+    switch (code)
+    {
+        case 1:
+            {
+                printf("\nNao foi possivel alocar a memoria\n");
+                break;
+            }
+    }
+}
+
+int aloca_mem_newgame(tpGame **newgame)
+{
+    (*newgame) = (tpGame *) malloc(sizeof(tpGame));
+
+    if(*newgame != NULL)
+    {
+        (*newgame)->proximo = NULL;//atribui valores apenas se foi alocado
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+void cadastra_game_ordenado(tpGame *cabeca)
+{
+    tpGame *newgame;
+    tpGame *cursor;
+
+    cursor = cabeca;
+
+    //newgame = (tpGame *) malloc(sizeof(tpGame));
+
+    if(aloca_mem_newgame(&newgame))
+    {
+        // Copia o endereco previamente alocado para dentro da
+        // função ler_game, a função ler_game ira gravar o que
+        // foi lido no endereço que foi passado para ela
+
+        ler_game(newgame);
+
+        while(cursor->proximo)
+        {
+        //if depois de while pois pode ser que chegue ao final da lista e "cursor->proximo" não exista
+            if((cursor->proximo->lancamento) > (newgame->lancamento))
+                break;  //se encontrar uma posição onde o ano de "newgame" for menor que a do "cursor"
+
+            cursor = cursor->proximo;
+        }
+
+        // Adiciona o novo elemento
+        newgame->proximo = cursor->proximo;
+        cursor->proximo = newgame;
+
+    }
+}
+
+void incere_ordenado(tpGame *cabeca, tpGame *newgame)
+{
+
+    tpGame *cursor = cabeca;
+
+    while(cursor->proximo)
+    {
+    //if depois de while pois pode ser que chegue ao final da lista e "cursor->proximo" não exista
+        if((cursor->proximo->lancamento) > (newgame->lancamento))
+            break;  //se encontrar uma posição onde o ano de "newgame" for menor que a do "cursor"
+
+        cursor = cursor->proximo;
+    }
+
+    // Adiciona o novo elemento
+    newgame->proximo = cursor->proximo;
+    cursor->proximo = newgame;
+
+}
+
+void cadastra_game_ao_final(tpGame *cabeca)
+{
+    tpGame *newgame;
+    tpGame *cursor;
+
+    cursor = cabeca;
+
+    if(aloca_mem_newgame(&newgame))
+    {
+        ler_game(newgame);
+
+        while(cursor->proximo)
+            cursor = cursor->proximo;
+
+        cursor->proximo = newgame;
+
+
+    }
+    else
+    {
+        imprime_erros(1);
+    }
+}
+
+void imprime_lista_games(tpGame *cabeca)
+{
+    tpGame *cursor;
+
+    cursor = cabeca;
+
+    system(CLEAR);
+
+    printf("Estao cadastrados os seguintes jogos: \n\n");
+    // Navega elemento por elemento na lista
+    while(cursor->proximo)
+    {
+        cursor = cursor->proximo;
+        imprime_game(cursor);
+    }
+
+    printf("\n\nFim da lista de Games... pressione ENTER\n\n");
+
+    system(PAUSE);
+
+}
+
+tpGame* pesquisa_nome(tpGame *cabeca)
+{
+    char nome_comparacao[64];
+
+    tpGame *cursor;
+
+    printf("\nNome do jogo: ");
+    limpa_buffer();
+    scanf("%[^\n]s",nome_comparacao);
+
+    cursor = cabeca;
+
+    while(cursor->proximo)
+    {
+        if(!strcmp(cursor->proximo->nome,nome_comparacao))
+           return cursor;
+        cursor = cursor->proximo;
+    }
+}
+
+void exclusao_por_nome(tpGame *cabeca)
+{
+    tpGame *cursor, *cursor_anterior;
+
+        //cursor anterior pega o cursor anterior do quero deletar
+    cursor_anterior = pesquisa_nome(cabeca);
+
+    cursor = cursor_anterior;
+    cursor_anterior = cursor -> proximo;
+
+    cursor -> proximo = cursor_anterior -> proximo;
+
+    free(cursor_anterior);
+
+}
+
+/* ----------------------Menu-------------------*/
+
+void menu_principal()
+{
+    system(CLEAR);
+	printf("********** MENU **********\n\n");
+	printf("1 - Cadastra game ordenado\n");
+	printf("2 - Cadastra game ao final\n");
+	printf("3 - Imprime lista de games\n");
+	printf("4 - Exclusao\n");
+	printf("5 - Ordenar lista\n");
+	printf("0 - SAIR\n\n");
+	printf("**************************\n\n");
+	printf("Escolha sua opcao: ");
+}
+
+void msg_erro()
+{
+    printf("\n\nOPCAO INCORRETO...\n\n");
+    getch();
+    system(CLEAR);
+}
+
+int escolha_opcao()
+{
+    int escolha;
+
+    limpa_buffer();
+    scanf("%d", &escolha);
+    system(CLEAR);
+
+    return escolha;
+}
+
+void ordenar_lista(tpGame *cabeca)
+{
+    tpGame *cursor, *inceridoNovaLista;
+    tpGame novaCabeca;
+
+    novaCabeca.proximo = NULL;
+
+    cursor = cabeca->proximo;
+    while(cursor){
+
+        inceridoNovaLista = (tpGame*) malloc(sizeof(tpGame));
+        *inceridoNovaLista = *cursor;
+        incere_ordenado(&novaCabeca, inceridoNovaLista);
+
+        cursor = cursor->proximo;
+    }
+
+    *cabeca = novaCabeca;
+
+    printf("Lista organizada com sucesso.\n");
+    system(PAUSE);
+
+}
+
+int main()
+{
+    int menu;
+
+    tpGame cabeca;
+    cabeca.proximo = NULL;
+
+    for(;;)
+	{
+		menu_principal();
+		menu=escolha_opcao();
+		switch(menu)
+		{
+		    case 1:
+				cadastra_game_ordenado(&cabeca);
+			break;
+
+		    case 2:
+				cadastra_game_ao_final(&cabeca);
+			break;
+
+			case 3:
+				imprime_lista_games(&cabeca);
+			break;
+
+            case 4:
+				exclusao_por_nome(&cabeca);
+			break;
+
+			case 5:
+				ordenar_lista(&cabeca);
+			break;
+
+			case 0:
+				return 0;
+			break;
+
+			default:
+				msg_erro();
+			break;
+		}
+	}
+}
